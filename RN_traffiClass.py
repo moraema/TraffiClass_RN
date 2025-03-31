@@ -69,4 +69,4 @@ def predecir_señal(img_path):
     print(f'Señal predicha: {clase_predicha}')
 
 
-predecir_señal('pruebas/prueba.png')  
+predecir_señal('pruebas/prueba002.png')  
