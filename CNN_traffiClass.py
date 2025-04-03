@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         self.btn_seleccionar.clicked.connect(self.seleccionar_carpeta)
         layout.addWidget(self.btn_seleccionar)
 
-        self.input_epochs = QLineEdit("20")
+        self.input_epochs = QLineEdit("40")
         layout.addWidget(QLabel("Número de épocas:"))
         layout.addWidget(self.input_epochs)
 
@@ -133,47 +133,46 @@ class MainWindow(QMainWindow):
         self.log_text.append("\n--- Reporte de Clasificación ---")
         self.log_text.append(report)
 
-        # Graficar matriz de confusión
+# 🔧 GRAFICAR curva de pérdida Y matriz de confusión en una sola figura
         self.fig.clf()
+        self.fig.set_size_inches(12, 8)  # Ajustar tamaño correctamente
+
+        # Subplot 1: Curva de pérdida
         ax1 = self.fig.add_subplot(211)
-        ax1.plot(history.history['loss'], label='Pérdida Entrenamiento')
-        ax1.plot(history.history['val_loss'], label='Pérdida Validación')
+        ax1.plot(history.history['loss'], label='Entrenamiento', color='blue')
+        ax1.plot(history.history['val_loss'], label='Validación', color='orange')
         ax1.set_title("Evolución de la pérdida")
         ax1.set_xlabel("Épocas")
-        ax1.set_ylabel("Loss")
+        ax1.set_ylabel("Pérdida")
         ax1.legend()
 
+        # Subplot 2: Matriz de confusión
         ax2 = self.fig.add_subplot(212)
         sns.heatmap(cm, annot=True, fmt="d", cmap="YlGnBu", ax=ax2,
                     xticklabels=val_generator.class_indices.keys(),
                     yticklabels=val_generator.class_indices.keys())
         ax2.set_title("Matriz de Confusión")
-        ax2.set_xlabel("Predicho")
-        ax2.set_ylabel("Real")
+        ax2.set_xlabel("Clase Predicha")
+        ax2.set_ylabel("Clase Real")
+        ax2.set_xticklabels(ax2.get_xticklabels(), rotation=45, ha='right', fontsize=8)
+        ax2.set_yticklabels(ax2.get_yticklabels(), rotation=0, fontsize=8)
 
         self.fig.tight_layout()
+        self.fig.savefig("resultados_entrenamiento.png", dpi=300)  # ✅ Guardar imagen en disco
         self.canvas.draw()
 
+        # Obtener precisión final de validación
         acc = history.history['val_accuracy'][-1]
         self.log_text.append(f"Precisión final de validación: {acc:.4f}")
 
+        # Guardar modelo si tiene buena precisión
         if acc > 0.90:
-            model.save("modelo_senales.h5")
-            self.log_text.append("Modelo guardado como 'modelo_senales.h5' 🎉")
+            model.save("modelo_senales.keras")
+            self.log_text.append("✅ Modelo guardado como 'modelo_senales.keras' 🎉")
         else:
-            self.log_text.append("Modelo no guardado. Precisión insuficiente.")
+            self.log_text.append("❌ Modelo no guardado. Precisión insuficiente (< 0.90)")
 
-        self.log_text.append("Graficando métricas...")
-
-        self.fig.clf()
-        ax1 = self.fig.add_subplot(111)
-        ax1.plot(history.history['loss'], label='Pérdida Entrenamiento')
-        ax1.plot(history.history['val_loss'], label='Pérdida Validación')
-        ax1.set_title("Evolución de la pérdida")
-        ax1.set_xlabel("Épocas")
-        ax1.set_ylabel("Loss")
-        ax1.legend()
-        self.canvas.draw()
+        
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
